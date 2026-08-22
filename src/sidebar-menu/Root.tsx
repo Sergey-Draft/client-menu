@@ -21,8 +21,8 @@ export interface MenuRootProps {
   children: ReactNode;
 }
 
-// Root holds no opinion about markup: it's just the state/context provider.
-// The <nav>, layout and styling all belong to the consumer.
+// No markup opinion here — just the context provider. <nav>, layout and
+// styling belong to the consumer.
 export function Root({
   activeId,
   collapsed: collapsedProp,

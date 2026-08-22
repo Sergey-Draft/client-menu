@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { useMenuContext } from "./internal";
 
 export interface ItemRenderProps {
@@ -11,7 +11,7 @@ export interface ItemRenderProps {
   };
 }
 
-export interface MenuItemProps {
+export interface MenuItemProps extends Omit<ComponentPropsWithoutRef<"li">, "children"> {
   id: string;
   /** Called on click, before the mobile drawer (if any) closes. */
   onSelect?: () => void;
@@ -21,7 +21,7 @@ export interface MenuItemProps {
 // Item never renders the clickable element itself — the consumer decides
 // whether it's a <button>, a plain <a>, or a router <Link>. That's how
 // routing stays entirely outside this component.
-export function Item({ id, onSelect, children }: MenuItemProps) {
+export function Item({ id, onSelect, children, ...rest }: MenuItemProps) {
   const { activeId, isMobile, setMobileOpen } = useMenuContext();
   const isActive = activeId === id;
 
@@ -31,7 +31,7 @@ export function Item({ id, onSelect, children }: MenuItemProps) {
   }
 
   return (
-    <li>
+    <li {...rest}>
       {children({
         isActive,
         itemProps: {

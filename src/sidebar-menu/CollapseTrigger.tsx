@@ -10,7 +10,6 @@ export interface CollapseTriggerProps extends Omit<ComponentPropsWithoutRef<"but
   children: (props: CollapseTriggerRenderProps) => ReactNode;
 }
 
-// The button at the bottom of the sidebar that switches narrow <-> wide.
 export function CollapseTrigger({ children, ...rest }: CollapseTriggerProps) {
   const { collapsed, setCollapsed } = useMenuContext();
 
