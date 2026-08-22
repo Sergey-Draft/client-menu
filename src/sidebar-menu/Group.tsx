@@ -1,4 +1,4 @@
-import { useState, type FocusEvent, type KeyboardEvent, type ReactNode } from "react";
+import { useState, type ComponentPropsWithoutRef, type FocusEvent, type KeyboardEvent, type ReactNode } from "react";
 import { useMenuContext } from "./internal";
 
 export interface TriggerRenderProps {
@@ -15,19 +15,22 @@ export interface TriggerRenderProps {
   };
 }
 
-export interface MenuGroupProps {
+export interface MenuGroupProps
+  extends Omit<ComponentPropsWithoutRef<"li">, "children" | "onMouseEnter" | "onMouseLeave" | "onBlur" | "onKeyDown"> {
   id: string;
   /** ids of the nested Menu.Item children, so the group knows when one of them is active. */
   childIds: string[];
   trigger: (props: TriggerRenderProps) => ReactNode;
   children: ReactNode;
+  /** className for the nested <ul> that holds the children (the flyout/accordion box itself). */
+  submenuClassName?: string;
 }
 
 // A group is a menu item with nested items (e.g. "Clients" > "List"/"Reviews").
 // Its submenu opens two different ways depending on the sidebar's width:
 //  - wide (or mobile drawer): click-to-toggle accordion, stays open while a child is active
 //  - narrow rail: hover/click flyout, closes again once the pointer/focus leaves
-export function Group({ id, childIds, trigger, children }: MenuGroupProps) {
+export function Group({ id, childIds, trigger, children, submenuClassName, ...rest }: MenuGroupProps) {
   const { activeId, collapsed, isMobile } = useMenuContext();
   const [clicked, setClicked] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -60,6 +63,7 @@ export function Group({ id, childIds, trigger, children }: MenuGroupProps) {
     // leaving the group (trigger + submenu) so the flyout/accordion can close.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <li
+      {...rest}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={handleMouseLeave}
       onBlur={handleBlur}
@@ -77,7 +81,11 @@ export function Group({ id, childIds, trigger, children }: MenuGroupProps) {
           onClick: () => setClicked((open) => !open),
         },
       })}
-      {isOpen && <ul id={submenuId}>{children}</ul>}
+      {isOpen && (
+        <ul id={submenuId} className={submenuClassName}>
+          {children}
+        </ul>
+      )}
     </li>
   );
 }
