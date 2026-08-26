@@ -6,7 +6,6 @@ export interface CollapseTriggerRenderProps {
 }
 
 export interface CollapseTriggerProps extends Omit<ComponentPropsWithoutRef<"button">, "children" | "onClick" | "type"> {
-  /** Lets you swap the icon depending on which way the toggle points. */
   children: (props: CollapseTriggerRenderProps) => ReactNode;
 }
 

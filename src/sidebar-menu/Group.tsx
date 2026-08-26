@@ -4,7 +4,6 @@ import { useMenuContext } from "./internal";
 export interface TriggerRenderProps {
   isActive: boolean;
   isOpen: boolean;
-  /** Spread onto whatever you render as the group's trigger — always a <button>. */
   triggerProps: {
     type: "button";
     "aria-expanded": boolean;
@@ -18,11 +17,9 @@ export interface TriggerRenderProps {
 export interface MenuGroupProps
   extends Omit<ComponentPropsWithoutRef<"li">, "children" | "onMouseEnter" | "onMouseLeave" | "onBlur" | "onKeyDown"> {
   id: string;
-  /** ids of the nested Menu.Item children, so the group knows when one of them is active. */
   childIds: string[];
   trigger: (props: TriggerRenderProps) => ReactNode;
   children: ReactNode;
-  /** className for the nested <ul> that holds the children (the flyout/accordion box itself). */
   submenuClassName?: string;
 }
 

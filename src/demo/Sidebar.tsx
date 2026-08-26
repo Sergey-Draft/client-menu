@@ -47,12 +47,13 @@ export function Sidebar({
           <span className={collapsed ? "md:sr-only" : ""}>HelloClient</span>
         </div>
 
-        <Menu.List className="flex-1 space-y-1 overflow-y-auto px-2">
+        <Menu.List className="flex-1 space-y-1 px-2">
           {navigation.map((entry) =>
             isNavGroup(entry) ? (
               <Menu.Group
                 key={entry.id}
                 id={entry.id}
+                className="relative"
                 childIds={entry.children.map((child) => child.id)}
                 submenuClassName={
                   collapsed
