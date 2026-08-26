@@ -18,9 +18,6 @@ export interface MenuItemProps extends Omit<ComponentPropsWithoutRef<"li">, "chi
   children: (props: ItemRenderProps) => ReactNode;
 }
 
-// Item never renders the clickable element itself — the consumer decides
-// whether it's a <button>, a plain <a>, or a router <Link>. That's how
-// routing stays entirely outside this component.
 export function Item({ id, onSelect, children, ...rest }: MenuItemProps) {
   const { activeId, isMobile, setMobileOpen } = useMenuContext();
   const isActive = activeId === id;

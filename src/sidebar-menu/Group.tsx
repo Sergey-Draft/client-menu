@@ -26,10 +26,6 @@ export interface MenuGroupProps
   submenuClassName?: string;
 }
 
-// A group is a menu item with nested items (e.g. "Clients" > "List"/"Reviews").
-// Its submenu opens two different ways depending on the sidebar's width:
-//  - wide (or mobile drawer): click-to-toggle accordion, stays open while a child is active
-//  - narrow rail: hover/click flyout, closes again once the pointer/focus leaves
 export function Group({ id, childIds, trigger, children, submenuClassName, ...rest }: MenuGroupProps) {
   const { activeId, collapsed, isMobile } = useMenuContext();
   const [clicked, setClicked] = useState(false);
@@ -59,8 +55,6 @@ export function Group({ id, childIds, trigger, children, submenuClassName, ...re
   }
 
   return (
-    // The <li> itself isn't interactive — these handlers just track hover/focus
-    // leaving the group (trigger + submenu) so the flyout/accordion can close.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <li
       {...rest}
