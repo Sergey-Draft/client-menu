@@ -21,8 +21,6 @@ export interface MenuRootProps {
   children: ReactNode;
 }
 
-// No markup opinion here — just the context provider. <nav>, layout and
-// styling belong to the consumer.
 export function Root({
   activeId,
   collapsed: collapsedProp,
@@ -37,7 +35,6 @@ export function Root({
   const [mobileOpen, setMobileOpen] = useControllableState(mobileOpenProp, defaultMobileOpen, onMobileOpenChange);
   const isMobile = useIsMobile();
 
-  // Leaving mobile width shouldn't leave the drawer "open" in the background.
   useEffect(() => {
     if (!isMobile && mobileOpen) setMobileOpen(false);
   }, [isMobile, mobileOpen, setMobileOpen]);

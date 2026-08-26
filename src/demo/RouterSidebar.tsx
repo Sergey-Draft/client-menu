@@ -1,10 +1,11 @@
+import { Link } from "react-router-dom";
 import { ChevronDown, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Menu } from "../sidebar-menu";
-import { isNavGroup, navigation } from "./navigation";
+import { isNavGroup, type NavEntry } from "./navigation";
 
-export interface SidebarProps {
+export interface RouterSidebarProps {
+  entries: NavEntry[];
   activeId: string | undefined;
-  onNavigate: (id: string) => void;
   collapsed: boolean;
   onCollapsedChange: (collapsed: boolean) => void;
   mobileOpen: boolean;
@@ -16,14 +17,14 @@ const rowBase =
 const rowInactive = "text-gray-600";
 const rowActive = "bg-blue-50 text-blue-700 hover:bg-blue-50";
 
-export function Sidebar({
+export function RouterSidebar({
+  entries,
   activeId,
-  onNavigate,
   collapsed,
   onCollapsedChange,
   mobileOpen,
   onMobileOpenChange,
-}: SidebarProps) {
+}: RouterSidebarProps) {
   return (
     <Menu.Root
       activeId={activeId}
@@ -48,7 +49,7 @@ export function Sidebar({
         </div>
 
         <Menu.List className="flex-1 space-y-1 overflow-y-auto px-2">
-          {navigation.map((entry) =>
+          {entries.map((entry) =>
             isNavGroup(entry) ? (
               <Menu.Group
                 key={entry.id}
@@ -81,22 +82,20 @@ export function Sidebar({
                 )}
               >
                 {entry.children.map((child) => (
-                  <Menu.Item key={child.id} id={child.id} onSelect={() => onNavigate(child.id)}>
+                  <Menu.Item key={child.id} id={child.id}>
                     {({ isActive, itemProps }) => (
-                      <button
-                        {...itemProps}
-                        className={[rowBase, "py-1.5", isActive ? rowActive : rowInactive].join(" ")}
-                      >
+                      <Link to={child.id} {...itemProps} className={[rowBase, "py-1.5", isActive ? rowActive : rowInactive].join(" ")}>
                         {child.label}
-                      </button>
+                      </Link>
                     )}
                   </Menu.Item>
                 ))}
               </Menu.Group>
             ) : (
-              <Menu.Item key={entry.id} id={entry.id} onSelect={() => onNavigate(entry.id)}>
+              <Menu.Item key={entry.id} id={entry.id}>
                 {({ isActive, itemProps }) => (
-                  <button
+                  <Link
+                    to={entry.id}
                     {...itemProps}
                     className={[rowBase, isActive ? rowActive : rowInactive, collapsed ? "md:justify-center" : ""].join(
                       " ",
@@ -104,7 +103,7 @@ export function Sidebar({
                   >
                     <entry.icon size={20} aria-hidden="true" className="shrink-0" />
                     <span className={collapsed ? "md:sr-only" : ""}>{entry.label}</span>
-                  </button>
+                  </Link>
                 )}
               </Menu.Item>
             ),

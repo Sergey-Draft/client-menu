@@ -21,8 +21,6 @@ export function useMenuContext(): MenuContextValue {
   return ctx;
 }
 
-// Matches Tailwind's default "md" breakpoint, so consumers' responsive
-// classes and this JS-driven mobile flag agree on where "mobile" ends.
 const MOBILE_QUERY = "(max-width: 767px)";
 
 export function useIsMobile(): boolean {
