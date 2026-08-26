@@ -13,16 +13,20 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+export type Role = "admin" | "manager";
+
 export interface NavLeaf {
   id: string;
   label: string;
   icon: LucideIcon;
+  roles?: Role[];
 }
 
 export interface NavGroup {
   id: string;
   label: string;
   icon: LucideIcon;
+  roles?: Role[];
   children: { id: string; label: string }[];
 }
 
@@ -32,9 +36,6 @@ export function isNavGroup(entry: NavEntry): entry is NavGroup {
   return "children" in entry;
 }
 
-// This is the config-driven half of the demo: the headless Menu.* components
-// only ever see JSX, but nothing stops a consumer from mapping data into that
-// JSX — this array is what gets turned into <Menu.Item>/<Menu.Group> below.
 export const navigation: NavEntry[] = [
   { id: "/trends", label: "Trends", icon: TrendingUp },
   { id: "/tasks", label: "Tasks", icon: CheckSquare },
@@ -61,8 +62,28 @@ export const navigation: NavEntry[] = [
     ],
   },
   { id: "/shop", label: "Shop", icon: ShoppingCart },
-  { id: "/reports", label: "Reports", icon: BarChart3 },
-  { id: "/tender", label: "Tender", icon: Percent },
-  { id: "/settings", label: "Settings", icon: Settings },
+  { id: "/reports", label: "Reports", icon: BarChart3, roles: ["admin"] },
+  { id: "/tender", label: "Tender", icon: Percent, roles: ["admin"] },
+  { id: "/settings", label: "Settings", icon: Settings, roles: ["admin"] },
   { id: "/knowledge-base", label: "Knowledge Base", icon: HelpCircle },
 ];
+
+export function navigationForRole(role: Role): NavEntry[] {
+  return navigation.filter((entry) => !entry.roles || entry.roles.includes(role));
+}
+
+export function findNavLabel(id: string | undefined): string {
+  if (!id) return "";
+  for (const entry of navigation) {
+    if (entry.id === id) return entry.label;
+    if (isNavGroup(entry)) {
+      const child = entry.children.find((c) => c.id === id);
+      if (child) return `${entry.label} / ${child.label}`;
+    }
+  }
+  return id;
+}
+
+export function getRoutableIds(entries: NavEntry[]): string[] {
+  return entries.flatMap((entry) => (isNavGroup(entry) ? entry.children.map((child) => child.id) : [entry.id]));
+}

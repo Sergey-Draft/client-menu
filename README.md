@@ -1,77 +1,94 @@
-# React + TypeScript + Vite
+# Client Menu
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Headless (без стилей) компонент бокового меню на React + TypeScript. Сам
+компонент отвечает только за логику — какой пункт активен, как раскрывается
+подменю, узкий/широкий режим, мобильный drawer, доступность. Вся разметка и
+стили — на стороне приложения, которое его использует. В демо показана
+интеграция и с `react-router-dom`, и с обычным `useState`, включая фильтрацию
+пунктов меню по роли пользователя.
 
-Currently, two official plugins are available:
+## Демо
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+🔗 https://sergey-draft.github.io/client-menu/
 
-## React Compiler
+## Стек
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- React 19, TypeScript, Vite
+- Tailwind CSS 4
+- react-router-dom — используется только в демо-приложении, не внутри самого меню
+- Vitest + Testing Library
+- ESLint (+ `eslint-plugin-jsx-a11y`), Prettier
+- GitHub Actions — CI и деплой на GitHub Pages
 
-Note: This will impact Vite dev & build performances.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Структура репозитория
 
 ```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+src/sidebar-menu/   сам компонент меню: состояние, логика, доступность (без стилей)
+src/demo/           пример использования на Tailwind: две демо-страницы
 ```
+
+## Запуск
+
+Требуется Node.js 20+.
+
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run test
+npm run lint
+npm run build
+```
+
+## API
+
+Компонентный подход (не JSON-конфиг): дерево меню собирается через JSX.
+`Menu.Root` можно как контролировать снаружи, так и оставить
+неконтролируемым — этим и обеспечивается лёгкая интеграция с роутером или с
+`useState`.
+
+| Компонент                                | Назначение                                                                                             |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `Menu.Root`                               | провайдер состояния: `activeId`, `collapsed`, `mobileOpen`                                              |
+| `Menu.List`                               | `<ul>`-обёртка списка пунктов                                                                            |
+| `Menu.Item`                               | пункт меню; кликабельный элемент передаётся через render-prop — `<button>`, `<a>` или `<Link>` роутера |
+| `Menu.Group`                              | пункт с вложенным подменю: accordion в широком режиме/на мобиле, flyout по hover/клику в узком          |
+| `Menu.CollapseTrigger`                    | переключатель узкий/широкий режим                                                                       |
+| `Menu.MobileTrigger` / `Menu.MobileOverlay` | кнопка и backdrop мобильного drawer                                                                     |
+
+```tsx
+<Menu.Root activeId={activeId} collapsed={collapsed} onCollapsedChange={setCollapsed}>
+  <Menu.List>
+    <Menu.Item id="/payments" onSelect={() => setActiveId("/payments")}>
+      {({ isActive, itemProps }) => (
+        <button {...itemProps} className={isActive ? "text-blue-700" : "text-gray-600"}>
+          Payments
+        </button>
+      )}
+    </Menu.Item>
+  </Menu.List>
+</Menu.Root>
+```
+
+## Возможности
+
+- узкий (иконки) / широкий (иконки + подписи) режимы, controlled или uncontrolled
+- подменю: accordion в широком режиме и на мобиле, flyout по hover/клику в узком
+- мобильный drawer с backdrop, автозакрытие при выборе пункта
+- доступность: `aria-current`, `aria-expanded`, `aria-controls`, скрытые подписи (`sr-only`) в узком режиме, закрытие подменю по Escape и по потере фокуса
+- две демо-интеграции: `react-router-dom` (`HashRouter`, реальные `<Link>`) и `useState`
+- фильтрация пунктов и самих маршрутов по роли пользователя — переключатель роли прямо в демо
+
+## CI/CD
+
+- `.github/workflows/ci.yml` — lint, typecheck, тесты и сборка на каждый PR
+- `.github/workflows/deploy.yml` — сборка и деплой на GitHub Pages при пуше в `main`
+
+## Скриншоты
+
+| Широкий режим                          | Узкий режим (flyout)                             |
+| ---------------------------------------- | --------------------------------------------------- |
+| ![Широкий режим](docs/screenshots/wide.png) | ![Flyout в узком режиме](docs/screenshots/narrow-flyout.png) |
+
+| Мобильный drawer                          | Фильтрация по роли                             |
+| -------------------------------------------- | --------------------------------------------------- |
+| ![Мобильный drawer](docs/screenshots/mobile.png) | ![Фильтрация по роли](docs/screenshots/permissions.png) |

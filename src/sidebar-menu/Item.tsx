@@ -3,7 +3,6 @@ import { useMenuContext } from "./internal";
 
 export interface ItemRenderProps {
   isActive: boolean;
-  /** Spread onto whatever clickable element you render — <a>, <Link>, <button>. */
   itemProps: {
     "aria-current": "page" | undefined;
     "data-active": "true" | "false";
@@ -13,14 +12,10 @@ export interface ItemRenderProps {
 
 export interface MenuItemProps extends Omit<ComponentPropsWithoutRef<"li">, "children"> {
   id: string;
-  /** Called on click, before the mobile drawer (if any) closes. */
   onSelect?: () => void;
   children: (props: ItemRenderProps) => ReactNode;
 }
 
-// Item never renders the clickable element itself — the consumer decides
-// whether it's a <button>, a plain <a>, or a router <Link>. That's how
-// routing stays entirely outside this component.
 export function Item({ id, onSelect, children, ...rest }: MenuItemProps) {
   const { activeId, isMobile, setMobileOpen } = useMenuContext();
   const isActive = activeId === id;
