@@ -1,9 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 export interface MenuContextValue {
-  /** id of the currently active item/group, e.g. the router pathname */
   activeId: string | undefined;
-  /** narrow (icons only) vs wide (icons + labels) */
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
   isMobile: boolean;
@@ -36,11 +34,6 @@ export function useIsMobile(): boolean {
   return isMobile;
 }
 
-/**
- * Standard controlled/uncontrolled pair: if `value` is passed, this component
- * is controlled from outside (e.g. by a router or by useState in the consumer);
- * otherwise it falls back to its own internal state.
- */
 export function useControllableState<T>(
   value: T | undefined,
   defaultValue: T,
