@@ -2,6 +2,7 @@ import { useState } from "react";
 import { HashRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Menu as MenuIcon } from "lucide-react";
 import { RouterSidebar } from "./RouterSidebar";
+import { StateInspector } from "./StateInspector";
 import { findNavLabel, getRoutableIds, navigationForRole, type Role } from "./navigation";
 
 function PageContent({ id }: { id: string }) {
@@ -27,17 +28,17 @@ function RouterLayout({ role, onRoleChange }: { role: Role; onRoleChange: (role:
         onMobileOpenChange={setMobileOpen}
       />
 
-      <div className={collapsed ? "md:pl-16" : "md:pl-64"}>
+      <div className={["sm:pb-16 lg:pb-0", collapsed ? "lg:pl-16" : "lg:pl-64"].join(" ")}>
         <header className="flex h-14 items-center gap-3 border-b border-gray-200 bg-white px-4">
           <button
             type="button"
             aria-label="Открыть меню"
             onClick={() => setMobileOpen(true)}
-            className="rounded-md p-2 text-gray-600 hover:bg-gray-100 md:hidden"
+            className="rounded-md p-2 text-gray-600 hover:bg-gray-100 sm:hidden"
           >
             <MenuIcon size={20} />
           </button>
-          <span className="font-semibold text-gray-900 md:hidden">HelloClient</span>
+          <span className="font-semibold text-gray-900 sm:hidden">HelloClient</span>
 
           <label className="ml-auto flex items-center gap-2 text-sm text-gray-600">
             Роль (демо)
@@ -60,6 +61,7 @@ function RouterLayout({ role, onRoleChange }: { role: Role; onRoleChange: (role:
             <Route path="/" element={<Navigate to="/payments" replace />} />
             <Route path="*" element={<Navigate to="/payments" replace />} />
           </Routes>
+          <StateInspector state={{ activeId: location.pathname, collapsed, mobileOpen, role }} />
         </main>
       </div>
     </div>

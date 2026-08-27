@@ -11,10 +11,37 @@ export interface SidebarProps {
   onMobileOpenChange: (open: boolean) => void;
 }
 
+// Three layouts share this one markup, switched purely by breakpoint:
+//  - below sm:  off-canvas drawer (phones)
+//  - sm to lg:  a persistent bottom tab bar (tablets, large phones)
+//  - lg and up: the collapsible left rail (desktop)
+// Every tier below explicitly sets the properties the tier above it changed,
+// instead of relying on them resetting on their own.
 const rowBase =
-  "flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500";
+  "flex items-center gap-3 rounded-md px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 " +
+  "sm:h-full sm:min-w-16 sm:flex-col sm:justify-center sm:gap-1 sm:rounded-none sm:px-2 sm:py-1 sm:text-xs " +
+  "lg:h-auto lg:min-w-0 lg:flex-row lg:gap-3 lg:rounded-md lg:px-3 lg:py-2 lg:text-sm";
+
+const subRowBase =
+  "flex items-center gap-3 rounded-md px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 " +
+  "sm:rounded-none sm:px-4 sm:py-3 " +
+  "lg:rounded-md lg:px-3 lg:py-2";
+
 const rowInactive = "text-gray-600";
 const rowActive = "bg-blue-50 text-blue-700 hover:bg-blue-50";
+
+const labelClassName = "flex-1 text-left sm:flex-none sm:text-center lg:flex-1 lg:text-left";
+
+// Sub-items render inside three very different containers: an inline indented
+// list (drawer / wide rail), a bottom sheet (tablet), or a flyout box (narrow
+// rail) — same data, same Menu.Item, only the wrapping <ul>'s classes change.
+const submenuShared =
+  "space-y-1 pl-8 " +
+  "sm:fixed sm:left-0 sm:right-0 sm:top-auto sm:bottom-16 sm:z-50 sm:max-h-80 sm:w-full sm:space-y-0 sm:divide-y sm:divide-gray-100 sm:overflow-y-auto sm:rounded-t-xl sm:border sm:border-gray-200 sm:bg-white sm:p-0 sm:pl-0 sm:shadow-lg";
+const submenuLgInline =
+  "lg:static lg:left-auto lg:right-auto lg:top-auto lg:bottom-auto lg:w-auto lg:max-h-none lg:space-y-1 lg:divide-y-0 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:pl-8 lg:shadow-none";
+const submenuLgFlyout =
+  "lg:absolute lg:left-full lg:right-auto lg:top-0 lg:bottom-auto lg:ml-1 lg:w-48 lg:max-h-80 lg:space-y-1 lg:divide-y-0 lg:overflow-y-auto lg:rounded-md lg:border lg:border-gray-200 lg:bg-white lg:p-1 lg:pl-1 lg:shadow-lg";
 
 export function Sidebar({
   activeId,
@@ -32,22 +59,34 @@ export function Sidebar({
       mobileOpen={mobileOpen}
       onMobileOpenChange={onMobileOpenChange}
     >
-      <Menu.MobileOverlay className="fixed inset-0 z-40 bg-black/40 md:hidden" />
+      <Menu.MobileOverlay className="fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 sm:hidden" />
 
       <nav
         aria-label="Основная навигация"
         className={[
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 bg-white transition-all duration-200",
-          mobileOpen ? "translate-x-0" : "-translate-x-full",
-          "md:translate-x-0",
-          collapsed ? "md:w-16" : "md:w-64",
+          "fixed z-50 flex border-gray-200 bg-white transition-all duration-300 ease-in-out",
+          "inset-y-0 w-64 flex-col border-r",
+          // Animating `left` instead of `transform` here on purpose: a
+          // transform on this element (even translate-x-0) would create a
+          // new containing block, breaking every `position: fixed` child
+          // used further down (the tablet sheet, its backdrop).
+          mobileOpen ? "left-0" : "-left-64",
+          "sm:left-0 sm:right-0 sm:top-auto sm:h-16 sm:w-full sm:flex-row sm:overflow-x-auto sm:border-t sm:border-r-0",
+          "lg:top-0 lg:right-auto lg:h-auto lg:flex-col lg:overflow-x-visible lg:border-t-0 lg:border-r",
+          collapsed ? "lg:w-16" : "lg:w-64",
         ].join(" ")}
       >
-        <div className="flex h-14 shrink-0 items-center px-4 font-semibold text-gray-900">
-          <span className={collapsed ? "md:sr-only" : ""}>HelloClient</span>
+        <div className="flex h-14 shrink-0 items-center px-4 font-semibold text-gray-900 sm:hidden lg:flex">
+          <span className={collapsed ? "lg:sr-only" : ""}>HelloClient</span>
         </div>
 
-        <Menu.List className="flex-1 space-y-1 px-2">
+        <Menu.List
+          className={[
+            "flex-1 space-y-1 px-2",
+            "sm:flex sm:items-stretch sm:gap-1 sm:space-y-0 sm:overflow-x-auto sm:px-1",
+            "lg:block lg:space-y-1 lg:overflow-x-visible lg:px-2",
+          ].join(" ")}
+        >
           {navigation.map((entry) =>
             isNavGroup(entry) ? (
               <Menu.Group
@@ -55,39 +94,44 @@ export function Sidebar({
                 id={entry.id}
                 className="relative"
                 childIds={entry.children.map((child) => child.id)}
-                submenuClassName={
-                  collapsed
-                    ? "space-y-1 pl-8 md:absolute md:left-full md:top-0 md:ml-1 md:w-48 md:rounded-md md:border md:border-gray-200 md:bg-white md:p-1 md:pl-1 md:shadow-lg"
-                    : "space-y-1 pl-8"
-                }
+                submenuClassName={[submenuShared, collapsed ? submenuLgFlyout : submenuLgInline].join(" ")}
                 trigger={({ isActive, isOpen, triggerProps }) => (
-                  <button
-                    {...triggerProps}
-                    className={[rowBase, isActive ? rowActive : rowInactive, collapsed ? "md:justify-center" : ""].join(
-                      " ",
-                    )}
-                  >
-                    <entry.icon size={20} aria-hidden="true" className="shrink-0" />
-                    <span className={["flex-1 text-left", collapsed ? "md:sr-only" : ""].join(" ")}>
-                      {entry.label}
-                    </span>
-                    <ChevronDown
-                      size={16}
-                      aria-hidden="true"
-                      className={["shrink-0 transition-transform", isOpen ? "rotate-180" : "", collapsed ? "md:hidden" : ""].join(
+                  <>
+                    <button
+                      {...triggerProps}
+                      className={[rowBase, isActive ? rowActive : rowInactive, collapsed ? "lg:justify-center" : "lg:justify-start"].join(
                         " ",
                       )}
+                    >
+                      <entry.icon size={20} aria-hidden="true" className="shrink-0" />
+                      <span className={[labelClassName, collapsed ? "lg:sr-only" : ""].join(" ")}>{entry.label}</span>
+                      <ChevronDown
+                        size={16}
+                        aria-hidden="true"
+                        className={[
+                          "shrink-0 transition-transform",
+                          isOpen ? "rotate-180" : "",
+                          "sm:hidden",
+                          collapsed ? "lg:hidden" : "lg:block",
+                        ].join(" ")}
+                      />
+                    </button>
+                    {/* Tapping outside the sheet closes it, same toggle the trigger itself uses. */}
+                    <div
+                      aria-hidden="true"
+                      onClick={isOpen ? triggerProps.onClick : undefined}
+                      className={[
+                        "fixed inset-0 z-40 hidden bg-black/40 transition-opacity duration-300 sm:block lg:hidden",
+                        isOpen ? "" : "sm:pointer-events-none sm:opacity-0",
+                      ].join(" ")}
                     />
-                  </button>
+                  </>
                 )}
               >
                 {entry.children.map((child) => (
                   <Menu.Item key={child.id} id={child.id} onSelect={() => onNavigate(child.id)}>
                     {({ isActive, itemProps }) => (
-                      <button
-                        {...itemProps}
-                        className={[rowBase, "py-1.5", isActive ? rowActive : rowInactive].join(" ")}
-                      >
+                      <button {...itemProps} className={[subRowBase, isActive ? rowActive : rowInactive].join(" ")}>
                         {child.label}
                       </button>
                     )}
@@ -99,12 +143,12 @@ export function Sidebar({
                 {({ isActive, itemProps }) => (
                   <button
                     {...itemProps}
-                    className={[rowBase, isActive ? rowActive : rowInactive, collapsed ? "md:justify-center" : ""].join(
+                    className={[rowBase, isActive ? rowActive : rowInactive, collapsed ? "lg:justify-center" : "lg:justify-start"].join(
                       " ",
                     )}
                   >
                     <entry.icon size={20} aria-hidden="true" className="shrink-0" />
-                    <span className={collapsed ? "md:sr-only" : ""}>{entry.label}</span>
+                    <span className={[labelClassName, collapsed ? "lg:sr-only" : ""].join(" ")}>{entry.label}</span>
                   </button>
                 )}
               </Menu.Item>
@@ -112,7 +156,7 @@ export function Sidebar({
           )}
         </Menu.List>
 
-        <Menu.CollapseTrigger className="m-2 hidden items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-100 md:flex">
+        <Menu.CollapseTrigger className="m-2 hidden items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-100 lg:flex">
           {({ collapsed }) => (collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />)}
         </Menu.CollapseTrigger>
       </nav>

@@ -19,7 +19,11 @@ export function useMenuContext(): MenuContextValue {
   return ctx;
 }
 
-const MOBILE_QUERY = "(max-width: 767px)";
+// Below Tailwind's "sm" (640px) is where the consumer switches to an
+// off-canvas drawer instead of a persistent bar/rail — this needs to match
+// whatever breakpoint the consumer actually renders that drawer at, since
+// it's what decides "does the group open as a flyout/sheet or an accordion".
+const MOBILE_QUERY = "(max-width: 639px)";
 
 export function useIsMobile(): boolean {
   const [isMobile, setIsMobile] = useState(() => window.matchMedia(MOBILE_QUERY).matches);
@@ -34,6 +38,9 @@ export function useIsMobile(): boolean {
   return isMobile;
 }
 
+// Standard controlled/uncontrolled pair: pass `value` to drive it from
+// outside (a router, localStorage, whatever), or leave it out and this
+// just manages its own state like a plain useState would.
 export function useControllableState<T>(
   value: T | undefined,
   defaultValue: T,

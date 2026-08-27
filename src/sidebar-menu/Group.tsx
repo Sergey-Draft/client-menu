@@ -25,37 +25,64 @@ export interface MenuGroupProps
 
 export function Group({ id, childIds, trigger, children, submenuClassName, ...rest }: MenuGroupProps) {
   const { activeId, collapsed, isMobile } = useMenuContext();
-  const [clicked, setClicked] = useState(false);
-  const [hovered, setHovered] = useState(false);
+
+  // Flyout (narrow desktop rail): a transient popover, open only while hovered/clicked.
+  const [flyoutOpen, setFlyoutOpen] = useState(false);
+  // Accordion (wide desktop / mobile drawer): open by default whenever a child is
+  // active, but the user can still click the trigger to force it open or closed.
+  // `null` means "no explicit choice yet, fall back to isActive".
+  const [forcedOpen, setForcedOpen] = useState<boolean | null>(null);
+  // A fresh navigation always wins over a stale "user closed this" choice,
+  // otherwise a group could get stuck collapsed even though its own child is
+  // active. Resetting during render (not in an effect) avoids an extra paint.
+  const [lastActiveId, setLastActiveId] = useState(activeId);
+  if (lastActiveId !== activeId) {
+    setLastActiveId(activeId);
+    setForcedOpen(null);
+  }
+
+  // Switching between the flyout and accordion layouts should start clean —
+  // otherwise a group left open before collapsing (or hovered in passing on
+  // the way to some other click) can reappear open in the other layout.
+  const [lastCollapsed, setLastCollapsed] = useState(collapsed);
+  if (lastCollapsed !== collapsed) {
+    setLastCollapsed(collapsed);
+    setFlyoutOpen(false);
+    setForcedOpen(null);
+  }
 
   const isActive = activeId !== undefined && childIds.includes(activeId);
   const isFlyout = collapsed && !isMobile;
-  const isOpen = isFlyout ? hovered || clicked : clicked || isActive;
+  const isOpen = isFlyout ? flyoutOpen : (forcedOpen ?? isActive);
   const submenuId = `${id}-submenu`;
 
-  function close() {
-    setClicked(false);
-    setHovered(false);
+  function toggle() {
+    if (isFlyout) {
+      setFlyoutOpen((open) => !open);
+    } else {
+      setForcedOpen((current) => !(current ?? isActive));
+    }
   }
 
   function handleMouseLeave() {
-    setHovered(false);
-    if (isFlyout) setClicked(false);
+    setFlyoutOpen(false);
   }
 
   function handleBlur(event: FocusEvent<HTMLLIElement>) {
-    if (!event.currentTarget.contains(event.relatedTarget)) close();
+    if (isFlyout && !event.currentTarget.contains(event.relatedTarget)) setFlyoutOpen(false);
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLLIElement>) {
-    if (event.key === "Escape") close();
+    if (isFlyout && event.key === "Escape") setFlyoutOpen(false);
   }
 
   return (
+    // The <li> itself isn't interactive; these just track hover/focus leaving
+    // the flyout so it can dismiss itself, same as a native popover would.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <li
       {...rest}
-      onMouseEnter={() => setHovered(true)}
+      onMouseEnter={() => setFlyoutOpen(true)}
       onMouseLeave={handleMouseLeave}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
@@ -69,7 +96,7 @@ export function Group({ id, childIds, trigger, children, submenuClassName, ...re
           "aria-controls": submenuId,
           "data-active": isActive ? "true" : "false",
           "data-open": isOpen ? "true" : "false",
-          onClick: () => setClicked((open) => !open),
+          onClick: toggle,
         },
       })}
       {isOpen && (

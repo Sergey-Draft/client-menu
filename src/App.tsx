@@ -13,7 +13,7 @@ function App() {
 
   return (
     <div>
-      <div className="fixed bottom-3 right-3 z-60 flex gap-1 rounded-lg bg-gray-100 p-1 shadow-md">
+      <div className="fixed bottom-20 right-3 z-60 flex gap-1 rounded-lg bg-gray-100 p-1 shadow-md">
         <button
           type="button"
           onClick={() => setMode("router")}
