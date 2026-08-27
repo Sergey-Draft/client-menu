@@ -52,6 +52,49 @@ describe("Menu.Group", () => {
     expect(screen.getByRole("button", { name: "Clients" })).toHaveAttribute("data-active", "true");
   });
 
+  it("can still be collapsed by the user even while one of its items is active", async () => {
+    renderClientsGroup({ collapsed: false, activeId: "/clients/list" });
+
+    await userEvent.click(screen.getByRole("button", { name: "Clients" }));
+    expect(screen.queryByRole("link", { name: "List" })).not.toBeInTheDocument();
+  });
+
+  it("re-opens for a newly active item, even after being manually closed", async () => {
+    const { rerender } = renderClientsGroup({ collapsed: false, activeId: "/clients/list" });
+
+    await userEvent.click(screen.getByRole("button", { name: "Clients" }));
+    expect(screen.queryByRole("link", { name: "Reviews" })).not.toBeInTheDocument();
+
+    rerender(
+      <Menu.Root activeId="/clients/reviews">
+        <Menu.List>
+          <Menu.Group
+            id="clients"
+            childIds={["/clients/list", "/clients/reviews"]}
+            trigger={({ triggerProps }) => <button {...triggerProps}>Clients</button>}
+          >
+            <Menu.Item id="/clients/list">
+              {({ itemProps }) => (
+                <a href="/clients/list" {...itemProps}>
+                  List
+                </a>
+              )}
+            </Menu.Item>
+            <Menu.Item id="/clients/reviews">
+              {({ itemProps }) => (
+                <a href="/clients/reviews" {...itemProps}>
+                  Reviews
+                </a>
+              )}
+            </Menu.Item>
+          </Menu.Group>
+        </Menu.List>
+      </Menu.Root>,
+    );
+
+    expect(screen.getByRole("link", { name: "Reviews" })).toBeInTheDocument();
+  });
+
   it("opens on hover and closes on mouse leave when the rail is collapsed", () => {
     renderClientsGroup({ collapsed: true });
     const wrapper = screen.getByRole("button", { name: "Clients" }).closest("li")!;
@@ -65,13 +108,14 @@ describe("Menu.Group", () => {
     expect(screen.queryByRole("link", { name: "List" })).not.toBeInTheDocument();
   });
 
-  it("closes on Escape", async () => {
-    renderClientsGroup({ collapsed: false });
+  it("closes the flyout on Escape", async () => {
+    renderClientsGroup({ collapsed: true });
+    const wrapper = screen.getByRole("button", { name: "Clients" }).closest("li")!;
 
-    await userEvent.click(screen.getByRole("button", { name: "Clients" }));
+    fireEvent.mouseEnter(wrapper);
     expect(screen.getByRole("link", { name: "List" })).toBeInTheDocument();
 
-    await userEvent.keyboard("{Escape}");
+    fireEvent.keyDown(wrapper, { key: "Escape" });
     expect(screen.queryByRole("link", { name: "List" })).not.toBeInTheDocument();
   });
 });
