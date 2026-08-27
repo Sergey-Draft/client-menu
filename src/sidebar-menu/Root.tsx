@@ -29,6 +29,9 @@ export function Root({
   const [mobileOpen, setMobileOpen] = useControllableState(mobileOpenProp, defaultMobileOpen, onMobileOpenChange);
   const isMobile = useIsMobile();
 
+  // If the viewport grows past the mobile breakpoint while the drawer is
+  // open, drop the stale "open" state so it isn't sitting there next time
+  // the user resizes back down.
   useEffect(() => {
     if (!isMobile && mobileOpen) setMobileOpen(false);
   }, [isMobile, mobileOpen, setMobileOpen]);
